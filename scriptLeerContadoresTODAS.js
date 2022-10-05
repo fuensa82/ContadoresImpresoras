@@ -11,7 +11,7 @@ var hoy=getHoy();
 var hora=getHoraActual();
 
 // URL of the musicbrainz API.
-var maquinas = [{
+var maquinas = [/*{
     nombre:"Ayuntamiento Abajo",
     url:"http://192.168.1.25/total_count.html",
     getNodoBN:"document.getElementsByTagName('tr')[2].childNodes[3].childNodes[0]",
@@ -29,8 +29,8 @@ var maquinas = [{
 },{
     nombre:"Policia - Pablo",
     url:"http://192.168.8.23/machine_status.html",
-    getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
-    getNodoCOLOR:"document.getElementsByTagName('tr')[13].childNodes[1].childNodes[0]",
+    getNodoBN:"document.getElementsByTagName('tr')[8].childNodes[1].childNodes[0]",
+    getNodoCOLOR:"document.getElementsByTagName('tr')[9].childNodes[1].childNodes[0]",
 },{
     nombre:"Policia - Patrulla",
     url:"http://192.168.8.22/machine_status.html",
@@ -64,21 +64,20 @@ var maquinas = [{
 },{
     nombre:"Archivo - Angela",
     url:"http://192.168.1.26/machine_status.html",
-    getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
-    getNodoCOLOR:"document.getElementsByTagName('tr')[13].childNodes[1].childNodes[0]",
+    getNodoBN:"document.getElementsByTagName('tr')[8].childNodes[1].childNodes[0]",
+    getNodoCOLOR:"document.getElementsByTagName('tr')[9].childNodes[1].childNodes[0]",
 },{
     nombre:"Deportes - Emiliano",
     url:"http://192.168.9.21/machine_status.html",
+    getNodoBN:"document.getElementsByTagName('tr')[8].childNodes[1].childNodes[0]",
+    getNodoCOLOR:"document.getElementsByTagName('tr')[9].childNodes[1].childNodes[0]",
+},*/{
+    nombre:"Ayuntamiento Planta 1 prueba",
+    url:"http://192.168.1.24",//webglue/getReport?name=ReportDeviceStatistics&lang=es",
     getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
     getNodoCOLOR:"document.getElementsByTagName('tr')[13].childNodes[1].childNodes[0]",
-},
-
-
-
-
-
-
-{
+    noProcesar:""
+},{
     nombre:"Ayuntamiento Planta 1",
     url:"http://192.168.1.24/webglue/getReport?name=ReportDeviceStatistics&lang=es",
     getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
@@ -88,11 +87,11 @@ var maquinas = [{
 
 if(!fs.existsSync(rutaFichero)){
     fs.appendFile(rutaFichero, "Impresora;Blanco y Negro;Color;fecha lectura\r\n", (err) => {
-        console.log("Error");
+        console.log("Error 1");
     });
 }else{
     fs.appendFile(rutaFichero, "*********************** "+hoy +" - "+ hora+" ********************************\r\n", (err) => {
-        console.log("Error");
+        console.log("Error 2: "+err);
     });
 }
 var indiceMaquina=0;
@@ -150,18 +149,23 @@ maquinas.forEach(maquina => {
 function leerMaquina(indiceMaquina){
     var maquina=maquinas[indiceMaquina];
     var promise=new Promise(function(resolve, reject) {
-        request(maquina.url,{json: true}, function  (error, response, body) {
-
+        request(maquina.url,{json: false}, function  (error, response, body) {
+            console.log(maquina.url);
             if (!error && response.statusCode === 200) {
-                var document = DOMParser.parseFromString(body);
-                var x = document.getElementsByTagName("tr");
-                console.log(eval(maquina.getNodoBN));
-                console.log(eval(maquina.getNodoCOLOR));
-                var cadenaResp=maquina.nombre+";"+eval(maquina.getNodoBN)+";"+eval(maquina.getNodoCOLOR)+";"+hoy+" "+hora+"\r\n";
-                fs.appendFile(rutaFichero, cadenaResp, (err) => {
-                    console.log("\nImpresora leída: "+maquina.nombre);
+                console.log("Lectura correcta");
+                if(maquina.noProcesar!=''){
+                    var document = DOMParser.parseFromString(body);
+                    var x = document.getElementsByTagName("tr");
+                    console.log(eval(maquina.getNodoBN));
+                    console.log(eval(maquina.getNodoCOLOR));
+                    var cadenaResp=maquina.nombre+";"+eval(maquina.getNodoBN)+";"+eval(maquina.getNodoCOLOR)+";"+hoy+" "+hora+"\r\n";
+                    fs.appendFile(rutaFichero, cadenaResp, (err) => {
+                        console.log("\nImpresora leída: "+maquina.nombre);
+                        resolve();
+                    });
+                }else{
                     resolve();
-                });
+                }
 
             }else{
                 console.log("ERROR al leer impresora: "+maquina.nombre+ " - ERROR: "+error)
