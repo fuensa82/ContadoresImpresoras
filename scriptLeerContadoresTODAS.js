@@ -88,55 +88,6 @@ if(!fs.existsSync(rutaFichero)){
 }
 var indiceMaquina=0;
 
-/*
-maquinas.forEach(maquina => {
-    request({
-        headers: {
-            'User-Agent': 'Ayto Fuensalida - Recoge contadores',
-        },
-        url: maquina.url,
-        json: false,
-        qs:{"name":"ReportDeviceStatistics"}
-    }, async function (error, response, body) {
-        //console.
-        if (!error && response.statusCode === 200) {
-            var document = DOMParser.parseFromString(body);
-            var x = document.getElementsByTagName("tr");
-            console.log(eval(maquina.getNodoBN));
-            console.log(eval(maquina.getNodoCOLOR));
-            var cadenaResp=maquina.nombre+";"+eval(maquina.getNodoBN)+";"+eval(maquina.getNodoCOLOR)+";"+hoy+" "+hora+"\r\n";
-            fs.appendFile(rutaFichero, cadenaResp, (err) => {
-                console.log("\nImpresora leída: "+maquina.nombre);
-            });
-
-        }else{
-            console.log("ERROR IN FUNCTION")
-        }
-    })
-});
-*/
-/*
-maquinas.forEach(maquina => {
-    request(maquina.url,{json: true}, function  (error, response, body) {
-        //console.
-        if (!error && response.statusCode === 200) {
-            var document = DOMParser.parseFromString(body);
-            var x = document.getElementsByTagName("tr");
-            console.log(eval(maquina.getNodoBN));
-            console.log(eval(maquina.getNodoCOLOR));
-            var cadenaResp=maquina.nombre+";"+eval(maquina.getNodoBN)+";"+eval(maquina.getNodoCOLOR)+";"+hoy+" "+hora+"\r\n";
-            fs.appendFile(rutaFichero, cadenaResp, (err) => {
-                console.log("\nImpresora leída: "+maquina.nombre);
-            });
-
-        }else{
-            console.log("ERROR al leer impresora: "+maquina.nombre+ " - ERROR: "+error)
-            fs.appendFile(rutaFichero, hoy+" "+hora+" - ERROR al leer impresora: "+maquina.nombre+ " - ERROR: "+error+"\r\n", (err) => {
-                console.log("\nImpresora leída: "+maquina.nombre);
-            });
-        }
-    })
-});*/
 
 function leerMaquina(indiceMaquina){
     var maquina=maquinas[indiceMaquina];
@@ -204,11 +155,7 @@ function getHoy(){
 
 leerMaquina(indiceMaquina);
 
-
-
 function leermaquinaPlanta1(){
-    
-
 
     var options = {
     host: '192.168.1.24',
@@ -223,37 +170,29 @@ function leermaquinaPlanta1(){
     };
     //respuesta de segunda peticion
     callback = function (response) {
-    var str = ''
-    response.on('data', function (chunk) {
-        str += chunk;
-    });
-
-    response.on('end', function () {
-
-        str = "<!DOCTYPE html><body>" + str + "</body>";
-        str = str.replaceAll("width = 400 ", "");
-        str = str.replaceAll("width = 400 ", "");
-        str = str.replaceAll("<br>", "");
-        str = str.replaceAll("&nbsp;", "");
-
-        //var document = DOMParser.parseFromString(str,'text/xml');
-        //var x = document.getElementsByTagName("tr");
-        xml2js.parseString(str, (err, result) => {
-        if (err) {
-            console.log(err);
-        } else {
-            var cadenaResp="Maquina Planta 1;"+result.body.TABLE[62].TR[0].td[1].trim()+";"+result.body.TABLE[63].TR[0].td[1].trim()+";"+hoy+" "+hora+"\r\n";
-            fs.appendFile(rutaFichero, cadenaResp, (err) => {
-            console.log("\nImpresora leída: maquina planta 1");
-            });
-        }
+        var str = ''
+        response.on('data', function (chunk) {
+            str += chunk;
         });
 
+        response.on('end', function () {
 
-
-
-        console.log(str);
-    });
+            str = "<!DOCTYPE html><body>" + str + "</body>";
+            str = str.replaceAll("width = 400 ", "");
+            str = str.replaceAll("width = 400 ", "");
+            str = str.replaceAll("<br>", "");
+            str = str.replaceAll("&nbsp;", "");
+            xml2js.parseString(str, (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                var cadenaResp="Maquina Planta 1;"+result.body.TABLE[62].TR[0].td[1].trim()+";"+result.body.TABLE[63].TR[0].td[1].trim()+";"+hoy+" "+hora+"\r\n";
+                fs.appendFile(rutaFichero, cadenaResp, (err) => {
+                console.log("\nImpresora leída: maquina planta 1");
+                });
+            }
+            });
+        });
     }
     var req = http.request({ host: '192.168.1.24' }, function (response) {
         var str = ''
@@ -266,6 +205,5 @@ function leermaquinaPlanta1(){
             req2.end();
         });
     });
-
     req.end();
 }
