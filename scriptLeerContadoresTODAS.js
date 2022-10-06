@@ -2,6 +2,9 @@ var request = require("request");
 var DOMParser = new (require('xmldom')).DOMParser;
 var fs = require("fs");
 const { rejects } = require("assert");
+var http = require('http');
+const xml2js = require('xml2js')
+
 
 var date=new Date();
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -11,7 +14,7 @@ var hoy=getHoy();
 var hora=getHoraActual();
 
 // URL of the musicbrainz API.
-var maquinas = [/*{
+var maquinas = [{
     nombre:"Ayuntamiento Abajo",
     url:"http://192.168.1.25/total_count.html",
     getNodoBN:"document.getElementsByTagName('tr')[2].childNodes[3].childNodes[0]",
@@ -71,17 +74,6 @@ var maquinas = [/*{
     url:"http://192.168.9.21/machine_status.html",
     getNodoBN:"document.getElementsByTagName('tr')[8].childNodes[1].childNodes[0]",
     getNodoCOLOR:"document.getElementsByTagName('tr')[9].childNodes[1].childNodes[0]",
-},*/{
-    nombre:"Ayuntamiento Planta 1 prueba",
-    url:"http://192.168.1.24",//webglue/getReport?name=ReportDeviceStatistics&lang=es",
-    getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
-    getNodoCOLOR:"document.getElementsByTagName('tr')[13].childNodes[1].childNodes[0]",
-    noProcesar:""
-},{
-    nombre:"Ayuntamiento Planta 1",
-    url:"http://192.168.1.24/webglue/getReport?name=ReportDeviceStatistics&lang=es",
-    getNodoBN:"document.getElementsByTagName('tr')[12].childNodes[1].childNodes[0]",
-    getNodoCOLOR:"document.getElementsByTagName('tr')[13].childNodes[1].childNodes[0]",
 }
 ];
 
@@ -181,6 +173,8 @@ function leerMaquina(indiceMaquina){
         indiceMaquina++;
         if(maquinas.length>indiceMaquina){
             leerMaquina(indiceMaquina);
+        }else{
+            leermaquinaPlanta1();
         }
     });
 
@@ -209,3 +203,69 @@ function getHoy(){
 }
 
 leerMaquina(indiceMaquina);
+
+
+
+function leermaquinaPlanta1(){
+    
+
+
+    var options = {
+    host: '192.168.1.24',
+    path: '/webglue/getReport?name=ReportDeviceStatistics&lang=es',
+    port: '80',
+    //This is the only line that is new. `headers` is an object with the headers to request
+    headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'Cache-Control': 'max-age=0'
+    }
+    };
+    //respuesta de segunda peticion
+    callback = function (response) {
+    var str = ''
+    response.on('data', function (chunk) {
+        str += chunk;
+    });
+
+    response.on('end', function () {
+
+        str = "<!DOCTYPE html><body>" + str + "</body>";
+        str = str.replaceAll("width = 400 ", "");
+        str = str.replaceAll("width = 400 ", "");
+        str = str.replaceAll("<br>", "");
+        str = str.replaceAll("&nbsp;", "");
+
+        //var document = DOMParser.parseFromString(str,'text/xml');
+        //var x = document.getElementsByTagName("tr");
+        xml2js.parseString(str, (err, result) => {
+        if (err) {
+            console.log(err);
+        } else {
+            var cadenaResp="Maquina Planta 1;"+result.body.TABLE[62].TR[0].td[1].trim()+";"+result.body.TABLE[63].TR[0].td[1].trim()+";"+hoy+" "+hora+"\r\n";
+            fs.appendFile(rutaFichero, cadenaResp, (err) => {
+            console.log("\nImpresora leída: maquina planta 1");
+            });
+        }
+        });
+
+
+
+
+        console.log(str);
+    });
+    }
+    var req = http.request({ host: '192.168.1.24' }, function (response) {
+        var str = ''
+        response.on('data', function (chunk) {
+            str += chunk;
+        });
+        response.on('end', function () {
+            console.log("PRIMERA: " + str);
+            var req2 = http.request(options, callback);
+            req2.end();
+        });
+    });
+
+    req.end();
+}
