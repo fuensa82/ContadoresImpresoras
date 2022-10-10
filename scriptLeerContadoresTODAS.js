@@ -9,7 +9,8 @@ const xml2js = require('xml2js')
 var date=new Date();
 const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-var rutaFichero="//ser4-fuensalida/DatosUsuarios/Usuarios/vpalomo/Impresoras/Lecturas"+meses[date.getMonth()]+".csv";
+//var rutaFichero="//ser4-fuensalida/DatosUsuarios/Usuarios/vpalomo/Impresoras/Lecturas"+meses[date.getMonth()]+".csv";
+var rutaFichero="Lecturas"+meses[date.getMonth()]+".csv";
 var hoy=getHoy();
 var hora=getHoraActual();
 
@@ -186,7 +187,7 @@ function leermaquinaPlanta1(){
             if (err) {
                 console.log(err);
             } else {
-                var cadenaResp="Maquina Planta 1;"+result.body.TABLE[62].TR[0].td[1].trim()+";"+result.body.TABLE[63].TR[0].td[1].trim()+";"+hoy+" "+hora+"\r\n";
+                var cadenaResp="Ayuntamiento Planta 1;"+result.body.TABLE[62].TR[0].td[1].trim()+";"+result.body.TABLE[63].TR[0].td[1].trim()+";"+hoy+" "+hora+"\r\n";
                 fs.appendFile(rutaFichero, cadenaResp, (err) => {
                 console.log("\nImpresora leída: maquina planta 1");
                 });
